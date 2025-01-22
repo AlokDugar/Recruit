@@ -1,0 +1,135 @@
+{% extends 'base1.html' %}
+
+{% block content %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Applicants List</title>
+
+    <style type="text/css">
+        table {
+            counter-reset: section;
+        }
+
+        .count:before {
+            counter-increment: section;
+            content: counter(section);
+        }
+        .scrolling-wrapper {
+            overflow-x: scroll;
+            overflow-y: hidden;
+            white-space: nowrap;
+            max-height: 340px;
+            display: flex;
+            }
+        .card {
+                min-width: 290px;
+                max-width: 290px;
+                height: 340px;
+                background-color: rgb(159,194,183,0.1);
+                display: inline-block;
+                margin-right: 8px;
+            }
+         .circle {
+                width: 50px;
+                height: 50px;
+                line-height: 50px;
+                border-radius: 50%;
+                font-size: 30px;
+                color: #2F4F4F;;
+                text-align: center;
+                background: #f0b63e;
+                background: -webkit-linear-gradient(to right, #f0b63e,#f6d000, #ffe500);
+                background: linear-gradient(to right, #f0b63e, #f6d000, #ffe500);
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+    }
+
+
+    </style>
+
+</head>
+<body class="main container-fluid">
+
+<table class="table table-sm table-hover">
+    <thead>
+    <tr>
+        <th scope="col">S. No.</th>
+        <th scope="col">Name</th>
+        <th scope="col">Contact</th>
+        <th scope="col">Email</th>
+        <th scope="col">Address</th>
+        <th scope="col">Gender</th>
+        <th scope="col">Date of Birth</th>
+        <th scope="col">Aptitude Score</th>
+        <th scope="col">Resume</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for info in applicants_list %}
+    <tr>
+        <td class="count"></td>
+        <td> {{ info.fname }} {{ info.mname }} {{ info.lname }}</td>
+        <td>{{ info.contact }}</td>
+        <td>{{ info.email }}</td>
+        <td>{{ info.address }}</td>
+        <td>{{ info.gender }}</td>
+        <td>{{ info.dob|date:'d M, Y' }}</td>
+        <td>{{ info.aptitude_score }}</td>
+        <td><a href="{{ info.resume.url }}" class="btn btn-primary btn-sm right"> View Resume</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</body>
+{% if not job.active %}
+<h4 class="mt-5 p-2 mb-3" style="background:#A9CCE3; color:#2F4F4F;">CV RANKINGS</h4>
+<div class="scrolling-wrapper">
+    {% for resume_list,results in zipped_list %}
+    <div class="card c1"><a href="{{resume_list.employee_id.resume.url}}">
+        <div class="overlay1"></div>
+        <div class="card-body">
+            <div class="circle">{{forloop.counter}}</div>
+            <h6 style="color: rgb(2,96,170); text-align: center; margin-top:10px;"> {{resume_list.employee_id.fname}}
+                {{resume_list.employee_id.mname}} {{resume_list.employee_id.lname}}</h6>
+            <br>
+            <h6>Aptitude Score: {{ resume_list.employee_id.aptitude_score }}</h6>
+            <h6 class="p-1 mt-2 mb-2" style="background:#A9CCE3; color:#2F4F4F;">Personality</h6>
+
+            <div class="progress" style="height:25px;">
+                <h6 style="margin-right:66px;">Openness: </h6>
+                <div class="progress-bar progress-bar-striped" role="progressbar" style="height:20px; width: {{results.openness}}" aria-valuenow="10"
+                     aria-valuemin="0" aria-valuemax="100">{{results.openness}}%</div>
+            </div>
+            <div class="progress" style="height:25px;">
+                <h6 style="margin-right:5px;">Conscientiousness: </h6>
+                <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="height:20px; width: {{results.conscientiousness}}" aria-valuenow="10"
+                     aria-valuemin="0" aria-valuemax="100">{{results.conscientiousness}}%</div>
+            </div>
+            <div class="progress" style="height:25px;">
+                <h6 style="margin-right:48px;">Extraversion: </h6>
+                <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="height:20px; width: {{results.extraversion}}" aria-valuenow="10"
+                     aria-valuemin="0" aria-valuemax="100">{{results.extraversion}}%</div>
+            </div>
+            <div class="progress" style="height:25px;">
+                <h6 style="margin-right:31px;">Agreeableness: </h6>
+                <div class="progress-bar progress-bar-striped bg-warning" role="progressbar" style="height:20px; width: {{results.agreeableness}}" aria-valuenow="10"
+                     aria-valuemin="0" aria-valuemax="100">{{results.agreeableness}}%</div>
+            </div>
+            <div class="progress" style="height:25px;">
+                <h6 style="margin-right:48px;">Neuroticism: </h6>
+                <div class="progress-bar progress-bar-striped bg-danger" role="progressbar" style="height:20px; width: {{results.neuroticism}}" aria-valuenow="10"
+                     aria-valuemin="0" aria-valuemax="100">{{results.neuroticism}}%</div>
+            </div>
+        </div>
+    </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+</html>
+
+{% endblock content %}

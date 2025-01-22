@@ -1,0 +1,106 @@
+from nltk.corpus import stopwords
+import pandas as pd
+import nltk
+import string
+from nltk.tokenize import wordpunct_tokenize as tokenize
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.stem import WordNetLemmatizer
+from sklearn.metrics.pairwise import cosine_similarity
+from nltk.corpus import wordnet as wn
+import sys, fitz
+import spacy
+import pandas as pd
+
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+docs = []
+
+cv = ['CV1 Priyanka Mehra.pdf', 'CV2 Rajeev Jain.pdf', 'CV4 Supriya Yadav.pdf', 'CV5 Shashank Vishwakarma.pdf',
+      'CV6 Shreya Bhusal.pdf', 'CV7 Ramesh Rajput.pdf', 'CV8 Amit Saini.pdf', 'CV10 Aarav Juyal.pdf', 'CV12 Sumitra Patel.pdf', 
+      'CV13 Reyansh Agarwal.pdf', 'CV14 Mehera Basu.pdf', 'CV15 Arman Shaikh.pdf', '1Amy.pdf', '3Carrie.pdf', '4Dickson.pdf', 
+      'Full stack developer.pdf']
+
+# cv = ['Full stack developer.pdf', 'job.pdf', 'job2.pdf', 'job3.pdf', 'Asst Finance Mgr - JD.pdf','CV2 Rajeev Jain.pdf']
+
+
+for name in cv:
+    doc = fitz.open(name)
+    text = ""
+
+    for page in doc:
+        text = text + str(page.getText())
+    
+    tx = " ".join(text.split('\n'))
+    docs.append(tx)
+    
+# print(docs)
+
+nlpdesc_model = spacy.load('nlpdesc_model')
+nlpdesc_CV_model = spacy.load('nlpdesc_CV_1_model')
+
+ndocs=[]
+for index, d in enumerate(docs):
+    if index == len(docs)-1:
+        document = nlpdesc_model(d)
+#         document = nlpdesc_CV_model(d)
+    else:
+        document = nlpdesc_CV_model(d)
+#         document = nlpdesc_model(d)
+    text=""
+
+    for ent in document.ents:
+        text = text + ' ' + str(ent.text)
+
+    if len(text) < 500:
+        ndocs.append(d)
+    else:
+        ndocs.append(text)
+print(ndocs[0])
+
+wordnet = WordNetLemmatizer()
+stop_words = set(stopwords.words('english'))
+table = str.maketrans('', '', string.punctuation)
+
+modified_arr = [[wordnet.lemmatize(i.lower()) for i in tokenize(d.translate(table)) if i.lower() not in stop_words] for d in ndocs]
+
+# print(modified_arr[0][0])
+
+skip=[]
+for d in modified_arr:
+    for i in range(len(d)):
+        synonyms=[]
+        for syn in wn.synsets(d[i]):
+            for l in syn.lemmas():
+                synonyms.append(l.name())
+     
+        for doc in modified_arr:
+            for j in range(len(doc)):
+                if doc[j] not in skip:
+                    if doc[j] in synonyms:
+                        if doc[j]!=d[i]:
+                            doc[j]=d[i]
+                            if doc[j] not in skip:
+                                skip.append(doc[j])
+                                
+# print(skip)
+# print(modified_arr)
+
+modified_doc = [' '.join(i) for i in modified_arr] # this is only to convert our list of lists to list of strings that vectorizer uses.
+# print(modified_doc)
+tf_idf = TfidfVectorizer().fit_transform(modified_doc)
+
+# print(tf_idf)
+
+length = len(ndocs) - 1
+for i in range(length+1):
+    cosine = cosine_similarity(tf_idf[length], tf_idf[i])
+    print(cosine)
+
+tfIdfVectorizer=TfidfVectorizer(use_idf=True)
+modified_doc = [' '.join(i) for i in modified_arr]
+tfIdf = tfIdfVectorizer.fit_transform(modified_doc)
+for i in range(len(ndocs)):
+    df = pd.DataFrame(tfIdf[i].T.todense(), index=tfIdfVectorizer.get_feature_names(), columns=["TF-IDF"])
+    df = df.sort_values('TF-IDF', ascending=False)
+#     print (df.head(25))
